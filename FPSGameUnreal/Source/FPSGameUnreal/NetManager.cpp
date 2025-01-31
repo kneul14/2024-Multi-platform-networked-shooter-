@@ -211,7 +211,9 @@ void ANetManager::Listen()
 
                 //if no object exists with that global id then spawn a new object
                 if (!isGameObjectFound) {
+
                     UE_LOG(LogTemp, Warning, TEXT("spawning"));
+
                     AActor* otherClient;
                     otherClient = GetWorld()->SpawnActor<AActor>(otherPlayerAvatar, FVector::ZeroVector, FRotator::ZeroRotator);
                     //otherClient->FindComponentByClass<UNetworkGameObject>()->globalID;

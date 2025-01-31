@@ -76,8 +76,8 @@ namespace _6018CEM____Server
 
                     // Clears the data buffer so the previous memory isn't held on to
                     data = new byte[4092];
-                                                                                                               //Receives a datagram into the data buffer
-                    recv                  = newSock.ReceiveFrom(data, ref remote);
+                    //Receives a datagram into the data buffer
+                    recv = newSock.ReceiveFrom(data, ref remote);
 
                                                                                                                //This will show the senders/clients IP Address and Port Number
                     //Console.WriteLine("Message received from " + remote.ToString());
@@ -147,42 +147,46 @@ namespace _6018CEM____Server
 
         // Makes it so you can connect servers.
         public void ServerConnect(Socket newSock, EndPoint remote)
-        {                                                                
-             bool doesIPExist            = false;
-             IPEndPoint senderIPEndPoint = (IPEndPoint)remote;
-             
-            
+        {
+            bool doesIPExist = false;
+            IPEndPoint senderIPEndPoint = (IPEndPoint)remote;
+
             // Check if the client IP already exists in the server's IP list
             foreach (IPEndPoint ep in existingClients)
             {
-                 if (senderIPEndPoint.ToString().Equals(ep.ToString()))
-                 {
-                     doesIPExist         = true;
-                 }
+                if (senderIPEndPoint.ToString().Equals(ep.ToString()))
+                {
+                    doesIPExist = true;
+                }
             }
-                                                                         // If the client IP doesn't exist make it 
-             if (!doesIPExist)
-             {                
+
+            // If the client IP doesn't exist, add it
+            if (!doesIPExist)
+            {
                 existingClients.Add(senderIPEndPoint);
                 Greeting(newSock, remote);
                 Console.WriteLine("A new client just connected! There are now " + existingClients.Count + " clients connected.");
-             }
+            }
 
-                                                                                                               // Send the game state to each client
-             foreach (IPEndPoint ep in existingClients)
-             {
-                 //Console.WriteLine("Sending client state to " + ep.ToString());
+            // Send the game state (player details) to the newly connected client
+            foreach (KeyValuePair<int, byte[]> kvp in gameState)
+            {
+                string playerDetails = Encoding.ASCII.GetString(kvp.Value); // Assuming `kvp.Value` is the player data
+                newSock.SendTo(Encoding.ASCII.GetBytes(playerDetails), Encoding.ASCII.GetBytes(playerDetails).Length, SocketFlags.None, remote);
+                //Console.WriteLine("Sent player details to new client: " + playerDetails);
+            }
 
-                 if (ep.Port != 0)
-                 {
-                     foreach (KeyValuePair<int, byte[]> kvp in gameState)
-                     {
-                         newSock.SendTo(kvp.Value, kvp.Value.Length, SocketFlags.None, ep);
-                         //Console.WriteLine("Data Sent");
-                     }
-                 }
-             }
-            
+            // Send the game state to each connected client
+            foreach (IPEndPoint ep in existingClients)
+            {
+                if (ep.Port != 0)
+                {
+                    foreach (KeyValuePair<int, byte[]> kvp in gameState)
+                    {
+                        newSock.SendTo(kvp.Value, kvp.Value.Length, SocketFlags.None, ep);
+                    }
+                }
+            }
         }
 
 
