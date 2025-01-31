@@ -76,7 +76,7 @@ public class NetworkGameObjectScript : MonoBehaviour
         {
 
             String myMessage = "PositionInformation:" + uniqueAssignedNetworkID + ";" + transform.position.x + ";" + transform.position.y + ";" + transform.position.z
-                                                      + ";" + transform.rotation.w + ";" + transform.rotation.x + ";" + transform.rotation.y + ";" + transform.rotation.z + ";" + 1;
+                                                      + ";" + transform.rotation.w + ";" + transform.rotation.x + ";" + transform.rotation.y + ";" + transform.rotation.z + ";" + "1";
             byte[] packet = Encoding.ASCII.GetBytes(myMessage);
 
             return packet;

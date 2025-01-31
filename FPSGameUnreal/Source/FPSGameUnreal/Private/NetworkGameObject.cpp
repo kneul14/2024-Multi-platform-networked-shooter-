@@ -116,8 +116,7 @@ void UNetworkGameObject::FromPacket(FString receivedMsg)
 	int globalIDFromPacket = FCString::Atoi(*parsedInfo[1]);
 	AActor* aActorComponent = GetOwner();
 
-	//if (globalIDFromPacket == globalID) {
-
+	// Parse position and rotation data
 	float PosX = FCString::Atof(*parsedInfo[2]);
 	float PosY = FCString::Atof(*parsedInfo[3]);
 	float PosZ = FCString::Atof(*parsedInfo[4]);
@@ -127,22 +126,32 @@ void UNetworkGameObject::FromPacket(FString receivedMsg)
 	float RotY = FCString::Atof(*parsedInfo[7]);
 	float RotZ = FCString::Atof(*parsedInfo[8]);
 
-	int client = FCString::Atof(*parsedInfo[9]);
+	int client = FCString::Atoi(*parsedInfo[9]);
 
+	FVector position;
+	FRotator rotation;
 
 	if (client == 1) { // Info from Unity
-		FVector position = FVector(PosX, PosZ, -PosY);
-		FRotator rotation(FQuat(RotW, RotX, RotZ, -RotY));
+		position = FVector(PosX, PosZ, PosY);  // Correct positioning convention
+		rotation = FRotator(FQuat(RotW, RotX, RotZ, -RotY));  // Applying rotation as quaternion
+	}
+	else if (client == 2) { // Info from Unreal
+		position = FVector(PosX * 100, PosY * 100, PosZ * 100);  // Scaling factor for Unreal units
+		rotation = FRotator(FQuat(RotX, RotY, RotZ, RotW));  // Adjusting rotation
 	}
 
-	if (client == 2) { // Info from Unreal
-		FVector position = FVector(PosX * 100, PosY * 100, PosZ * 100);
-		FRotator rotation(FQuat(RotX, RotY, RotZ, RotW));
+	// Now, update the actor's position and rotation
+	if (aActorComponent)
+	{
+		aActorComponent->SetActorLocation(position);
+		aActorComponent->SetActorRotation(rotation);
 	}
 
-	FString myMessage = FString::Printf(TEXT("PositionInformation:%i;%f;%f;%f;%f;%f;%f;%f"), globalID, PosX, PosY, PosZ, RotW, RotX, RotY, RotZ);
+	// Format the message to show the updated values
+	FString myMessage = FString::Printf(TEXT("PositionInformation:%i;%f;%f;%f;%f;%f;%f;%f;%i"), globalIDFromPacket, PosX, PosY, PosZ, RotW, RotX, RotY, RotZ, client);
 
-	UE_LOG(LogTemp, Warning, TEXT("myMessage"), *myMessage);
+	// Log the message
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *myMessage);
 }
 
 FString UNetworkGameObject::ToPacket()
